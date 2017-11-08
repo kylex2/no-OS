@@ -1,0 +1,25 @@
+<map id="i2c_remove" name="i2c_remove">
+<area shape="rect" id="node1" title="Free the resources allocated by i2c_init()." alt="" coords="505,411,604,437"/>
+<area shape="rect" id="node2" href="$ad5110_8h.html#a7c2cc1ad2f1416eb03518f42ffc93b7c" title="Free the resources allocated by ad5110_init()." alt="" coords="323,5,449,32"/>
+<area shape="rect" id="node3" href="$ad525x_8h.html#a30f65a3499d356a5bbb3da73a02141dc" title="Free the resources allocated by ad525x_init()." alt="" coords="323,56,449,83"/>
+<area shape="rect" id="node4" href="$ad5629r_8h.html#a33bafb0c4ae866cfeefd886961a16bd8" title="Free the resources allocated by AD5629R_Init()." alt="" coords="320,107,452,133"/>
+<area shape="rect" id="node5" href="$ad5686_8h.html#a01c30a52d97d90fc37d6968c5a640b33" title="Free the resources allocated by ad5686_init()." alt="" coords="323,157,449,184"/>
+<area shape="rect" id="node6" href="$ad5933_8h.html#a30e9974a607c5911ee14e2698d6c9745" title="Free the resources allocated by ad5933_init()." alt="" coords="323,208,449,235"/>
+<area shape="rect" id="node7" href="$ad7091r5_8h.html#a1cdce192650d405e407f85cf655da1a4" title="Free the memory allocated by ad7091r5_init()." alt="" coords="316,259,456,285"/>
+<area shape="rect" id="node8" href="$ad7156_8h.html#acb5992dab6dd090d29a63202cbdae1df" title="Free the resources allocated by ad7156_init()." alt="" coords="323,309,449,336"/>
+<area shape="rect" id="node9" href="$ad7746_8h.html#a2f5d9a49f99bf836d5614406c98897c4" title="Initialize the ad7606 device structure." alt="" coords="138,360,237,387"/>
+<area shape="rect" id="node11" href="$ad7746_8h.html#ae1efa797d4e9c3f8c469e3664dfece3b" title="Deinitialize the ad7746 driver and free all allocated resources." alt="" coords="323,411,449,437"/>
+<area shape="rect" id="node13" href="$ad799x_8h.html#a8d8e218e9ef55cc26142dab938e1d2d2" title="Free the resources allocated by ad799x_init()." alt="" coords="323,461,449,488"/>
+<area shape="rect" id="node14" href="$adp5589_8h.html#a10acbb41db90622198b0eb53091ffb47" title="Free the resources allocated by adp5589_init()." alt="" coords="319,512,453,539"/>
+<area shape="rect" id="node15" href="$adpd188_8h.html#ad498aa08ccb8f2c328fcc761f391738d" title="Initialize the ADPD188 driver." alt="" coords="333,563,439,589"/>
+<area shape="rect" id="node18" href="$adpd188_8h.html#a53db32d73e56848c5d0c9f91bda435c2" title="Free resources allocated by adpd188_init()." alt="" coords="319,613,453,640"/>
+<area shape="rect" id="node20" href="$adpd410x_8h.html#a500e3df000d107f73c1c2846c7f5b54d" title="Free memory allocated by adpd410x_setup()." alt="" coords="315,664,457,691"/>
+<area shape="rect" id="node21" href="$adpd410x_8h.html#a8c47ad8226f8c0882232750616b4ac6d" title="Setup the device and the driver." alt="" coords="321,715,451,741"/>
+<area shape="rect" id="node22" href="$adt7420_8h.html#a08ee099177977a9d753f4e0e81510ec5" title="Free the resources allocated by adt7420_init()." alt="" coords="320,765,452,792"/>
+<area shape="rect" id="node23" href="$adxl345_8h.html#a3bbabc453efcf5d1c31b60d8ca792e96" title="Free the resources allocated by adxl345_init()." alt="" coords="321,816,451,843"/>
+<area shape="rect" id="node10" href="$ad7746-ebz_2src_2app_2headless_8c.html#a840291bc02cba5474a4cb46a9b9566fe" title=" " alt="" coords="5,385,60,412"/>
+<area shape="rect" id="node12" href="$iio__ad7746_8h.html#a5e2b26ce07af275918829832d4c0c69a" title=" " alt="" coords="112,411,263,437"/>
+<area shape="rect" id="node16" href="$iio__adpd188_8h.html#ad4e7b974902520383dcf1d16b4c80169" title="Initialize the IIO driver and allocate memory." alt="" coords="123,563,252,589"/>
+<area shape="rect" id="node17" href="$iio__adpd1080_2src_2main_8c.html#a840291bc02cba5474a4cb46a9b9566fe" title="main" alt="" coords="5,563,60,589"/>
+<area shape="rect" id="node19" href="$iio__adpd188_8h.html#a9d97b04973215c0d461dccc283912e42" title="Free mmory allocated by adpd188_iio_init()." alt="" coords="108,613,267,640"/>
+</map>
