@@ -82,6 +82,10 @@
 extern ad9528Device_t clockAD9528_;
 extern mykonosDevice_t mykDevice;
 
+#ifdef DAC_DMA_EXAMPLE
+uint32_t dac_buffer[1024] __attribute__ ((aligned));
+uint16_t adc_buffer[16384*4] __attribute__ ((aligned));
+#endif
 /***************************************************************************//**
  * @brief main
 *******************************************************************************/
@@ -916,19 +920,31 @@ int main(void)
 #ifdef DAC_DMA_EXAMPLE
 	axi_dac_load_custom_data(tx_dac, sine_lut_iq,
 				 ARRAY_SIZE(sine_lut_iq),
-				 DDR_MEM_BASEADDR + 0xA000000);
+				 (uintptr_t)dac_buffer);
 #ifndef ALTERA_PLATFORM
 	Xil_DCacheFlush();
 #endif
 	axi_dmac_init(&tx_dmac, &tx_dmac_init);
-	axi_dmac_transfer(tx_dmac, DDR_MEM_BASEADDR + 0xA000000,
-			  sizeof(sine_lut_iq) * 2);
-#endif
+	axi_dmac_transfer(tx_dmac, (uintptr_t)dac_buffer,
+			  sizeof(sine_lut_iq));
+
 	mdelay(1000);
 
 	/* Initialize the DMAC and transfer 16384 samples from ADC to MEM */
 	axi_dmac_init(&rx_dmac, &rx_dmac_init);
 	axi_dmac_init(&rx_obs_dmac, &rx_obs_dmac_init);
+
+	axi_dmac_transfer(rx_dmac,
+			  (uintptr_t)adc_buffer,
+			  sizeof(adc_buffer));
+#ifndef ALTERA_PLATFORM
+	Xil_DCacheInvalidateRange((uintptr_t)adc_buffer, sizeof(adc_buffer));
+#endif
+
+	printf("DAC_DMA_EXAMPLE: address=%#lx samples=%lu channels=%u bits=%lu\n",
+	       (uintptr_t)adc_buffer, ARRAY_SIZE(adc_buffer), rx_adc_init.num_channels,
+	       8 * sizeof(adc_buffer[0]));
+#endif
 
 #ifdef IIO_SUPPORT
 
@@ -1119,13 +1135,6 @@ int main(void)
 	} while (true);
 
 #endif // IIO_SUPPORT
-
-	axi_dmac_transfer(rx_dmac,
-			  DDR_MEM_BASEADDR + 0x800000,
-			  16384 * 8);
-#ifndef ALTERA_PLATFORM
-	Xil_DCacheInvalidateRange(DDR_MEM_BASEADDR + 0x800000, 16384 * 8);
-#endif
 
 	printf("Done\n");
 
