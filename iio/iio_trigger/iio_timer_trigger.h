@@ -47,15 +47,13 @@
 #include "irq.h"
 #include "iio_types.h"
 
-struct iio_timer_trigger_desc {
-	struct timer_desc *timer;
-};
+struct iio_timer_trigger_desc;
 
 struct iio_timer_trigger_init_param {
 	struct timer_init_param timer_param;
 };
 
-extern const struct iio_attribute iio_timer_attributes[];
+extern struct iio_device iio_timer_trigger_device_desc;
 
 /* Init iio. */
 int32_t iio_timer_trigger_init(struct iio_timer_trigger_desc **desc,

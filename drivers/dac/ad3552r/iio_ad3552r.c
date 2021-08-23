@@ -157,6 +157,11 @@ static ssize_t iio_ad3552r_attr_set(void *device, char *buf, size_t len,
 	return len;
 }
 
+void ad3552r_trigger_hander(struct ad3552r_desc *desc)
+{
+	printf("Hello from trigger handler\n");
+}
+
 /******************************************************************************/
 /************************** IIO Types Declarations *****************************/
 /******************************************************************************/
@@ -228,4 +233,5 @@ struct iio_device ad3552r_iio_descriptor = {
 	.write_dev = (int32_t (*)())ad3552r_write_dev,
 	.debug_reg_read = (int32_t (*)())ad3552r_read_reg,
 	.debug_reg_write = (int32_t (*)())ad3552r_write_reg,
+	.trigger_callback = (void (*)())ad3552r_trigger_hander
 };

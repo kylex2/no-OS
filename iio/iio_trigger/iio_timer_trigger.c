@@ -49,6 +49,9 @@
 #include "iio_timer_trigger.h"
 #include "error.h"
 #include "util.h"
+#include "list.h"
+#include <pthread.h>
+#include <unistd.h>
 
 /*****************************************************************************/
 /******************** Macros and Constants Definitions ***********************/
@@ -66,9 +69,103 @@
 	.store = iio_attr_set\
 }
 
+struct iio_timer_trigger_desc {
+	struct timer_desc	*timer;
+	struct list_desc	*callbacks;
+};
+
 /*****************************************************************************/
 /************************* Functions Definitions *****************************/
 /*****************************************************************************/
+
+struct timer_trigger_callback {
+	void (*callback)(void * dev);
+	void *dev;
+};
+
+static int32_t iio_cmp_interfaces(struct timer_trigger_callback *a,
+				  struct timer_trigger_callback *b)
+{
+	if (a->callback == b->callback && a->dev == b->dev)
+		return 0;
+
+	return -1;
+}
+
+void thread_function(struct iio_timer_trigger_desc *desc)
+{
+	struct iterator *iter;
+	struct timer_trigger_callback *call;
+	int32_t err;
+
+	while(true)
+	{
+		err = iterator_init(&iter, desc->callbacks, 1);
+		while (err == 0) {
+			iterator_read(iter, (void **)&call);
+			call->callback(call->dev);
+
+			err = iterator_move(iter, 1);
+			if (IS_ERR_VALUE(err))
+				break;
+		}
+		printf("Hello from thread\n");
+		usleep(1000000);
+		iterator_remove(iter);
+	}
+}
+/* Init iio. */
+int32_t iio_timer_trigger_init(struct iio_timer_trigger_desc **desc,
+			       struct iio_timer_trigger_init_param *param)
+{
+	struct iio_timer_trigger_desc *ldesc;
+	int32_t ret;
+
+	if (!param || !desc)
+		return FAILURE;
+
+	ldesc = (struct iio_timer_trigger_desc *)calloc(1,
+			sizeof(struct iio_timer_trigger_desc));
+	if (!ldesc)
+		return -ENOMEM;
+
+	
+	ret = list_init(&ldesc->callbacks, LIST_DEFAULT,
+			(f_cmp)iio_cmp_interfaces);
+	if (IS_ERR_VALUE(ret)) {
+		free(ldesc);
+		return ret;
+	}
+	
+	*desc = ldesc;
+	
+	pthread_t pid;
+	pthread_create(&pid, NULL, thread_function, ldesc);
+
+	return 0;
+}
+
+/* Free the resources allocated by iio_timer_trigger_init(). */
+int32_t iio_timer_trigger_remove(struct iio_timer_trigger_desc *desc)
+{
+	struct timer_trigger_callback	*call;
+	int32_t				err;
+
+	if (!desc)
+		return -EINVAL;
+
+	while (true) {
+		err = desc->callbacks->pop(desc->callbacks, (void **)&call);
+		if (IS_ERR_VALUE(err))
+			break;
+		free(call);
+	}
+
+	list_remove(desc->callbacks);
+	free(desc);
+
+	return 0;
+}
 
 static ssize_t iio_attr_get(void *device, char *buf, size_t len,
 			    const struct iio_ch_info *channel,
@@ -153,38 +250,65 @@ static ssize_t iio_attr_set(void *device, char *buf, size_t len,
 	// return len;
 }
 
+int32_t iio_timer_trigger_add_callback(struct iio_timer_trigger_desc *desc,
+				       void (*callback)(void * dev),
+				       void *dev)
+{
+	struct timer_trigger_callback	*call;
+	int32_t				err;
+
+	if (!desc)
+		return -EINVAL;
+
+	call = (struct timer_trigger_callback *)calloc(1, sizeof(call));
+	if (!call)
+		return -ENOMEM;
+
+	call->callback = callback;
+	call->dev = dev;
+	err = desc->callbacks->push(desc->callbacks, call);
+	if (IS_ERR_VALUE(err)) {
+		free(call);
+		return err;
+	}
+
+	return 0;
+}
+
+int32_t iio_timer_trigger_remove_callback(struct iio_timer_trigger_desc *desc,
+					  void (*callback)(void * dev),
+					  void *dev)
+{
+	struct timer_trigger_callback	*call;
+	struct timer_trigger_callback	cmp_call;
+	int32_t				err;
+
+	if (!desc)
+		return -EINVAL;
+
+	cmp_call.callback = callback;
+	cmp_call.dev = dev;
+	err = list_get_find(desc->callbacks, (void **)&call, &cmp_call);
+	if (IS_ERR_VALUE(err))
+		return err;
+
+	free(call);
+
+	return 0;
+}
+
 /******************************************************************************/
 /************************** IIO Types Declarations *****************************/
 /******************************************************************************/
 
-const struct iio_attribute iio_timer_attributes[] = {
+struct iio_attribute iio_timer_trigger_attributes[] = {
 	IIO_TRIGGER_ATTR("sampling_frequency", IIO_SAMPLING_FREQUENCY),
 	END_ATTRIBUTES_ARRAY,
 };
 
-/* Init iio. */
-int32_t iio_timer_trigger_init(struct iio_timer_trigger_desc **desc,
-			       struct iio_timer_trigger_init_param *param)
-{
-	struct iio_timer_trigger_desc *ldesc;
-
-	if (!param || !desc)
-		return FAILURE;
-
-	ldesc = (struct iio_timer_trigger_desc *)calloc(1,
-			sizeof(struct iio_timer_trigger_desc));
-	if (!ldesc)
-		return -ENOMEM;
-
-	*desc = ldesc;
-
-	return 0;
-}
-
-/* Free the resources allocated by iio_timer_trigger_init(). */
-int32_t iio_timer_trigger_remove(struct iio_timer_trigger_desc *desc)
-{
-	free(desc);
-
-	return 0;
-}
+struct iio_device iio_timer_trigger_device_desc = {
+	.is_trigger = true,
+	.attributes = iio_timer_trigger_attributes,
+	.add_callback = iio_timer_trigger_add_callback,
+	.remove_callback = iio_timer_trigger_remove_callback,
+};

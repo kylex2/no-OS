@@ -885,10 +885,10 @@ int32_t test() {
 	};
 
 	struct iio_app_device devices[] = {
-		IIO_APP_DEVICE("ad3552r", dac, &ad3552r_iio_descriptor,
-				NULL, &wr_buff),
-		IIO_APP_DEVICE("trig1", trigger, &iio_timer_trigger_descriptor,
-				NULL, NULL),
+		IIO_APP_OUTPUT_DEVICE("ad3552r", dac, &ad3552r_iio_descriptor,
+				      &wr_buff),
+		IIO_APP_TRIGGER("trig", trigger,
+				&iio_timer_trigger_device_desc),
 	};
 
 	ok = 1;

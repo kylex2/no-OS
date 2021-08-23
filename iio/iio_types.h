@@ -46,6 +46,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "tinyiiod.h"
+#include "list.h"
 
 /******************************************************************************/
 /*************************** Types Declarations *******************************/
@@ -224,7 +225,24 @@ struct iio_device {
 	int32_t (*debug_reg_read)(void *dev, uint32_t reg, uint32_t *readval);
 	/* Write device register */
 	int32_t (*debug_reg_write)(void *dev, uint32_t reg, uint32_t writeval);
+	/* Called when a trigger is triggered */
+	void (*trigger_callback)(void *dev);
 
+	/* Trigger fields */
+	/*
+	 * Set if the device represents a trigger.
+	 * It should have only attributes field set
+	 */
+	bool is_trigger;
+	/*
+	 * Called when a new device is using the trigger. Dev must be passed
+	 * to the callback
+	 */
+	int32_t (*add_callback)(void *trig_instance, void (*callback)(void * dev),
+				void *dev);
+	/* Called when a device stops using the trigger */
+	int32_t (*remove_callback)(void *trig_instance, void (*callback)(void * dev),
+				   void *dev);
 };
 
 #endif /* IIO_TYPES_H_ */

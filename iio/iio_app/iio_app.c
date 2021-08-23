@@ -289,6 +289,7 @@ int32_t iio_app_run(struct iio_app_device *devices, int32_t len)
 
 	do {
 		status = iio_step(iio_desc);
+		usleep(1000);
 	} while (true);
 error:
 #ifndef LINUX_PLATFORM
