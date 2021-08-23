@@ -55,12 +55,7 @@
 /********************** Macros and Constants Definitions **********************/
 /******************************************************************************/
 
-#define GPIO_BANK_0_PINS	32
-#define GPIO_BANK_1_PINS	22
-#define GPIO_BANK_2_PINS	32
-#define GPIO_BANK_3_OFFSET	(GPIO_BANK_0_PINS + GPIO_BANK_1_PINS + \
-				 GPIO_BANK_2_PINS)
-#define GPIO_OFFSET		GPIO_BANK_3_OFFSET
+
 
 /* GPIO Indexes */
 #define GPIO_RESET_N				0
@@ -73,7 +68,15 @@
 #define GPIO_8					7
 #define TOTAL_GPIOS				8
 
+#define GPIO_BANK_0_PINS	32
+#define GPIO_BANK_1_PINS	22
+#define GPIO_BANK_2_PINS	32
+#define GPIO_BANK_3_OFFSET	(GPIO_BANK_0_PINS + GPIO_BANK_1_PINS + \
+				 GPIO_BANK_2_PINS)
+
 #ifdef XILINX_PLATFORM
+
+#define GPIO_OFFSET		GPIO_BANK_3_OFFSET
 
 #define SPI_DEVICE_ID		XPAR_SPI_0_DEVICE_ID
 #define GPIO_DEVICE_ID		XPAR_PS7_GPIO_0_DEVICE_ID
@@ -107,6 +110,8 @@ const uint8_t dac_buff[BUFF_SIZE];
 #define MAX_SIZE_BASE_ADDR	10000
 //#define UART_BAUDRATE		921600
 #define UART_BAUDRATE		115200
+
+#define TIMER_DEVICE_ID				0
 
 #define SPI_DEVICE_ID 				0
 #define UART_DEVICE_ID				0

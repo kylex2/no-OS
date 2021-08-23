@@ -6,6 +6,7 @@ SRC_DIRS += $(PROJECT)/srcs			\
 		$(NO-OS)/drivers/gpio		\
 		$(PLATFORM_DRIVERS)		\
 		$(NO-OS)/iio/iio_app		\
+		$(NO-OS)/iio/iio_trigger	\
 		$(NO-OS)/util			\
 		$(INCLUDE)
 

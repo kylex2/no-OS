@@ -46,15 +46,13 @@
 #include "error.h"
 #include "print_log.h"
 #include "iio_app.h"
+#include "iio_timer_trigger.h"
 #include "iio_ad3552r.h"
 #include "ad3552r.h"
 #include "spi.h"
 #include "gpio.h"
-#include "gpio_extra.h"
 #include "delay.h"
 #include "util.h"
-#include "irq_extra.h"
-#include "timer_extra.h"
 
 #ifdef XILINX_PLATFORM
 
@@ -64,6 +62,8 @@
 
 #include "spi_extra.h"
 #include "gpio_extra.h"
+#include "irq_extra.h"
+#include "timer_extra.h"
 #endif
 
 #ifdef LINUX_PLATFORM
@@ -88,11 +88,11 @@ static uint8_t gpio_default_prop[][2] = {
 };
 
 #ifdef XILINX_PLATFORM
-struct gpio_platform_ops	*gpio_ops = &xil_gpio_platform_ops;
+const struct gpio_platform_ops	*gpio_ops = &xil_gpio_platform_ops;
 #define SPI_OPS 	(&xil_spi_reg_ops_pl)
 #endif
 #ifdef LINUX_PLATFORM
-struct gpio_platform_ops	*gpio_ops = &linux_gpio_platform_ops;
+const struct gpio_platform_ops	*gpio_ops = &linux_gpio_platform_ops;
 #define SPI_OPS		(&linux_spi_platform_ops)
 #endif
 
@@ -105,8 +105,8 @@ struct ad3552r_init_param default_ad3552r_param = {
 		.platform_ops = SPI_OPS,
 		.extra = NULL
 	},
-	.timer_id = TIMER_DEVICE_ID,
-	.timer_intr_nb = TIMER_IRPT_INTR
+	//.timer_id = TIMER_DEVICE_ID,
+	//.timer_intr_nb = TIMER_IRPT_INTR
 };
 
 struct gpio_desc *gpios[TOTAL_GPIOS];
@@ -191,7 +191,6 @@ void remove_gpios() {
 	char path[100];
 	int fd;
 	int nb;
-	int ret;
 	int i;
 	int len;
 	for (i = 0; i < TOTAL_GPIOS; i++) {
@@ -753,32 +752,38 @@ int32_t test() {
 	pr_debug("Start\n");
 
 	ret = init_gpios(gpios);
-
+	void *platorm_gpio_param;
+#ifdef XILINX_PLATFORM
 	struct xil_gpio_init_param platorm_gpio_xil_param = {
 			.device_id = GPIO_DEVICE_ID,
 			.type = GPIO_PS
 	};
+	platorm_gpio_param = &platorm_gpio_xil_param;
+#endif
+#ifdef LINUX_PLATFORM
+	platorm_gpio_param = NULL;
+#endif
 	struct gpio_init_param	ldac_param = {
 			.number = GPIO_OFFSET + GPIO_LDAC_N,
 			.platform_ops = gpio_ops,
-			.extra = &platorm_gpio_xil_param
+			.extra = &platorm_gpio_param
 	};
 
-	struct xil_timer_init_param xil_tmr_param = {
-			.type = TIMER_PS
-	};
+	// struct xil_timer_init_param xil_tmr_param = {
+	// 		.type = TIMER_PS
+	// };
 
-	struct xil_irq_init_param xil_irq_param = {
-			.type = IRQ_PS,
-	};
-	struct irq_init_param	irq_param = {
-			.irq_ctrl_id = INTC_DEVICE_ID,
-			.extra = &xil_irq_param
-	};
-	struct irq_ctrl_desc	*irq_crtl;
+	// struct xil_irq_init_param xil_irq_param = {
+	// 		.type = IRQ_PS,
+	// };
+	// struct irq_init_param	irq_param = {
+	// 		.irq_ctrl_id = INTC_DEVICE_ID,
+	// 		.extra = &xil_irq_param
+	// };
+	// struct irq_ctrl_desc	*irq_crtl;
 
-	ret = irq_ctrl_init(&irq_crtl, &irq_param);
-	PRINT_AND_RET_ON_ERR(ret, "irq_ctrl_init failed");
+	// ret = irq_ctrl_init(&irq_crtl, &irq_param);
+	// PRINT_AND_RET_ON_ERR(ret, "irq_ctrl_init failed");
 
 #if 0
 	int okk = 0;
@@ -792,8 +797,8 @@ int32_t test() {
 	}
 #endif
 	default_ad3552r_param.ldac_param = &ldac_param;
-	default_ad3552r_param.irq_crtl = irq_crtl;
-	default_ad3552r_param.tmr_extra = &xil_tmr_param;
+	//default_ad3552r_param.irq_crtl = irq_crtl;
+	//default_ad3552r_param.tmr_extra = &xil_tmr_param;
 
 	ret = ad3552r_init(&dac, &default_ad3552r_param);
 	PRINT_AND_RET_ON_ERR(ret, "ad3552r_init failed");
@@ -863,6 +868,13 @@ int32_t test() {
 
 	pr_debug("IIO started\n");
 
+	struct iio_timer_trigger_desc *trigger;
+	struct iio_timer_trigger_init_param trigger_param = {0};
+
+	ret = iio_timer_trigger_init(&trigger, &trigger_param);
+	if (IS_ERR_VALUE(ret))
+		return ret;
+
 	int ok = 0;
 	while (ok)
 		if (ok == -1) return -1;
@@ -875,6 +887,8 @@ int32_t test() {
 	struct iio_app_device devices[] = {
 		IIO_APP_DEVICE("ad3552r", dac, &ad3552r_iio_descriptor,
 				NULL, &wr_buff),
+		IIO_APP_DEVICE("trig1", trigger, &iio_timer_trigger_descriptor,
+				NULL, NULL),
 	};
 
 	ok = 1;

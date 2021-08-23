@@ -47,8 +47,8 @@
 #include "print_log.h"
 #include "util.h"
 #include "spi.h"
-#include "irq.h"
-#include "timer.h"
+//#include "irq.h"
+//#include "timer.h"
 #include "gpio.h"
 #include "delay.h"
 
@@ -80,12 +80,12 @@ struct ad3552r_desc {
 	struct ad3552_transfer_config	spi_cfg;
 	struct spi_desc			*spi;
 	struct irq_ctrl_desc		*irq_ctrl;
-	struct timer_desc		*tmr;
+	//struct timer_desc		*tmr;
 	struct gpio_desc		*ldac;
 	struct ad3552r_ch_data		ch_data[AD3552R_NUM_CH];
 	enum ad3552r_update_mode	update_mode;
 	enum ad3552r_input_trigger_mode trigger_mode;
-	uint16_t			timer_id;
+	//uint16_t			timer_id;
 	uint16_t			timer_intr_nb;
 	void				*tmr_extra;
 	volatile uint8_t		is_rise_edge;
@@ -635,146 +635,147 @@ static int32_t _ad3552r_set_crc_enable(struct ad3552r_desc *desc, uint16_t en)
 	return SUCCESS;
 }
 
-static void _tmr_callback(struct ad3552r_desc *desc, uint32_t event,
-			  void *extra)
-{
-	int32_t ret;
+// static void _tmr_callback(struct ad3552r_desc *desc, uint32_t event,
+// 			  void *extra)
+// {
+// 	int32_t ret;
 
-	/* Enter here when timer expiers */
-	if (desc->trigger_mode == AD3552R_TRIGGER_HW_LDAC_INTERNAL) {
-		ret = gpio_set_value(desc->ldac, !desc->ldac_val);
-		if (IS_ERR_VALUE(ret))
-			return ;
-		if (desc->ldac_val == 0)
-			desc->is_rise_edge = 1;
-		desc->ldac_val = !desc->ldac_val;
-	}
-}
+// 	/* Enter here when timer expiers */
+// 	if (desc->trigger_mode == AD3552R_TRIGGER_HW_LDAC_INTERNAL) {
+// 		ret = gpio_set_value(desc->ldac, !desc->ldac_val);
+// 		if (IS_ERR_VALUE(ret))
+// 			return ;
+// 		if (desc->ldac_val == 0)
+// 			desc->is_rise_edge = 1;
+// 		desc->ldac_val = !desc->ldac_val;
+// 	}
+// }
 
-static int32_t _remove_timer_config(struct ad3552r_desc *desc)
-{
-	int32_t ret;
+// static int32_t _remove_timer_config(struct ad3552r_desc *desc)
+// {
+// 	int32_t ret;
 
-	/* Clean old resources */
-	ret = irq_disable(desc->irq_ctrl, desc->timer_intr_nb);
-	if (IS_ERR_VALUE(ret))
-		return ret;
-	ret = irq_unregister(desc->irq_ctrl, desc->timer_intr_nb);
-	if (IS_ERR_VALUE(ret))
-		return ret;
-	ret = timer_stop(desc->tmr);
-	if (IS_ERR_VALUE(ret))
-		return ret;
-	ret = timer_remove(desc->tmr);
-	if (IS_ERR_VALUE(ret))
-		return ret;
-	desc->tmr = NULL;
+// 	/* Clean old resources */
+// 	ret = irq_disable(desc->irq_ctrl, desc->timer_intr_nb);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
+// 	ret = irq_unregister(desc->irq_ctrl, desc->timer_intr_nb);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
+// 	ret = timer_stop(desc->tmr);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
+// 	ret = timer_remove(desc->tmr);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
+// 	desc->tmr = NULL;
 
-	return SUCCESS;
-}
+// 	return SUCCESS;
+// }
 
-static int32_t _update_timer_config(struct ad3552r_desc *desc)
-{
-	struct callback_desc	call;
-	struct timer_init_param	tmr_param;
-	uint32_t		freq;
-	uint32_t		new_load;
-	int32_t			ret;
-	float			scale;
-	float			desired_period;
 
-	if (!desc->tmr) {
-		tmr_param.id = desc->timer_id;
-		tmr_param.freq_hz = SEC_TO_10NS(1);
-		tmr_param.load_value = 0xFFFFFFFF;
-		tmr_param.extra = desc->tmr_extra;
-		ret = timer_init(&desc->tmr, &tmr_param);
-		if (IS_ERR_VALUE(ret))
-			return ret;
-	}
-	ret = timer_stop(desc->tmr);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// static int32_t _update_timer_config(struct ad3552r_desc *desc)
+// {
+// 	struct callback_desc	call;
+// 	struct timer_init_param	tmr_param;
+// 	uint32_t		freq;
+// 	uint32_t		new_load;
+// 	int32_t			ret;
+// 	float			scale;
+// 	float			desired_period;
 
-	ret = timer_count_clk_get(desc->tmr, &freq);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// 	if (!desc->tmr) {
+// 		tmr_param.id = desc->timer_id;
+// 		tmr_param.freq_hz = SEC_TO_10NS(1);
+// 		tmr_param.load_value = 0xFFFFFFFF;
+// 		tmr_param.extra = desc->tmr_extra;
+// 		ret = timer_init(&desc->tmr, &tmr_param);
+// 		if (IS_ERR_VALUE(ret))
+// 			return ret;
+// 	}
+// 	ret = timer_stop(desc->tmr);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-	new_load = desc->update_period_ns / 2.0;
-	desired_period = (float)new_load / (SEC_TO_10NS(1) * 10);
-	new_load = freq * desired_period;
-	ret = timer_counter_set(desc->tmr, new_load);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// 	ret = timer_count_clk_get(desc->tmr, &freq);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-	call.callback = (void (*)(void *, uint32_t, void *))_tmr_callback;
-	call.ctx = desc;
-	call.config = NULL;
-	ret = irq_register_callback(desc->irq_ctrl,
-				    desc->timer_intr_nb,
-				    &call);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// 	new_load = desc->update_period_ns / 2.0;
+// 	desired_period = (float)new_load / (SEC_TO_10NS(1) * 10);
+// 	new_load = freq * desired_period;
+// 	ret = timer_counter_set(desc->tmr, new_load);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-	ret = irq_enable(desc->irq_ctrl, desc->timer_intr_nb);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// 	call.callback = (void (*)(void *, uint32_t, void *))_tmr_callback;
+// 	call.ctx = desc;
+// 	call.config = NULL;
+// 	ret = irq_register_callback(desc->irq_ctrl,
+// 				    desc->timer_intr_nb,
+// 				    &call);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-	ret = timer_start(desc->tmr);
-	if (IS_ERR_VALUE(ret))
-		return ret;
+// 	ret = irq_enable(desc->irq_ctrl, desc->timer_intr_nb);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-	return SUCCESS;
-}
+// 	ret = timer_start(desc->tmr);
+// 	if (IS_ERR_VALUE(ret))
+// 		return ret;
 
-static int32_t _config_trigger_mode(struct ad3552r_desc *desc, uint16_t val)
-{
-	int32_t ret;
+// 	return SUCCESS;
+// }
 
-	/* Change to timer init_param and do check here */
-	if (!desc->irq_ctrl)
-		return -EINVAL;
+// static int32_t _config_trigger_mode(struct ad3552r_desc *desc, uint16_t val)
+// {
+// 	int32_t ret;
 
-	if (desc->trigger_mode == val)
-		return SUCCESS;
+// 	/* Change to timer init_param and do check here */
+// 	if (!desc->irq_ctrl)
+// 		return -EINVAL;
+
+// 	if (desc->trigger_mode == val)
+// 		return SUCCESS;
 	
-	if (desc->trigger_mode != AD3552R_TRIGGER_NONE) {
-		/* Release current timer config */
-		ret = _remove_timer_config(desc);
-		if (IS_ERR_VALUE(ret))
-			return ret;
-	}
+// 	if (desc->trigger_mode != AD3552R_TRIGGER_NONE) {
+// 		/* Release current timer config */
+// 		ret = _remove_timer_config(desc);
+// 		if (IS_ERR_VALUE(ret))
+// 			return ret;
+// 	}
 
-	if (val == AD3552R_TRIGGER_NONE) {
-		desc->trigger_mode = val;
-		return SUCCESS;
-	}
+// 	if (val == AD3552R_TRIGGER_NONE) {
+// 		desc->trigger_mode = val;
+// 		return SUCCESS;
+// 	}
 
-	/* Init timer */
+// 	/* Init timer */
 
-	switch (val) {
-	case AD3552R_TRIGGER_HW_LDAC_INTERNAL:
-		if (!desc->ldac)
-			return -EINVAL;
-		desc->ldac_val = 0;
-		//No break;
-	case AD3552R_TRIGGER_DELAY_DAC_UPDATE:
-	case AD3552R_TRIGGER_SW_LDAC:
-		ret = _update_timer_config(desc);
-		if (IS_ERR_VALUE(ret))
-			return ret;
-		break;
-	case AD3552R_TRIGGER_HW_LDAC_EXTERNAL:
-		if (!desc->is_hw_trigger_ready)
-			return -EINVAL;
-		break;
-	default:
-		val = AD3552R_TRIGGER_NONE;
-	}
-	desc->trigger_mode = val;
+// 	switch (val) {
+// 	case AD3552R_TRIGGER_HW_LDAC_INTERNAL:
+// 		if (!desc->ldac)
+// 			return -EINVAL;
+// 		desc->ldac_val = 0;
+// 		//No break;
+// 	case AD3552R_TRIGGER_DELAY_DAC_UPDATE:
+// 	case AD3552R_TRIGGER_SW_LDAC:
+// 		ret = _update_timer_config(desc);
+// 		if (IS_ERR_VALUE(ret))
+// 			return ret;
+// 		break;
+// 	case AD3552R_TRIGGER_HW_LDAC_EXTERNAL:
+// 		if (!desc->is_hw_trigger_ready)
+// 			return -EINVAL;
+// 		break;
+// 	default:
+// 		val = AD3552R_TRIGGER_NONE;
+// 	}
+// 	desc->trigger_mode = val;
 
-	return SUCCESS;
-}
+// 	return SUCCESS;
+// }
 
 int32_t ad3552r_get_dev_value(struct ad3552r_desc *desc,
 			  enum ad3552r_dev_attributes attr,
@@ -849,14 +850,16 @@ int32_t ad3552r_set_dev_value(struct ad3552r_desc *desc,
 		desc->update_mode = val;
 		break;
 	case AD3552R_INPUT_TRIGGER_MODE:
-		return _config_trigger_mode(desc, val);
+		return -EINVAL;
+		//return _config_trigger_mode(desc, val);
 	case AD3552R_DAC_UPDATE_PERIOD_NS:
-		if (val < 10)
-			return -EINVAL;
-		desc->update_period_ns = val;
-		if (desc->tmr)
-			return _update_timer_config(desc);
-		break;
+		return -EINVAL;
+		// if (val < 10)
+		// 	return -EINVAL;
+		// desc->update_period_ns = val;
+		// if (desc->tmr)
+		// 	return _update_timer_config(desc);
+		// break;
 	case AD3552R_VREF_SELECT:
 		desc->vref_sel = val & AD3552R_MASK_REFERENCE_VOLTAGE_SEL;
 		//No break
@@ -1191,9 +1194,9 @@ int32_t ad3552r_init(struct ad3552r_desc **desc,
 	ldesc->ch_data[1].code_max = UINT16_MAX;
 	ldesc->active_ch = 0;
 	ldesc->irq_ctrl = init_param->irq_crtl;
-	ldesc->timer_id = init_param->timer_id;
-	ldesc->timer_intr_nb = init_param->timer_intr_nb;
-	ldesc->tmr_extra = init_param->tmr_extra;
+	// ldesc->timer_id = init_param->timer_id;
+	// ldesc->timer_intr_nb = init_param->timer_intr_nb;
+	// ldesc->tmr_extra = init_param->tmr_extra;
 	ldesc->is_hw_trigger_ready = init_param->is_hw_trigger_ready;
 	ldesc->hw_trigger_ctx = init_param->hw_trigger_ctx;
 

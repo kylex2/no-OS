@@ -50,7 +50,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "spi.h"
-#include "irq.h"
+//#include "irq.h"
 #include "gpio.h"
 #include "crc8.h"
 
@@ -377,8 +377,8 @@ struct ad3552r_desc;
 struct ad3552r_init_param {
 	struct spi_init_param	spi_param;
 	struct gpio_init_param	*ldac_param;
-	uint16_t		timer_id;
-	uint16_t		timer_intr_nb;
+	//uint16_t		timer_id;
+	//uint16_t		timer_intr_nb;
 	uint8_t			(*is_hw_trigger_ready)(void *ctx);
 	void			*hw_trigger_ctx;
 	void			*tmr_extra;
