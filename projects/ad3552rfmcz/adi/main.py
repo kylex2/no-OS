@@ -76,7 +76,7 @@ while i < NB_TIMES:
                 print('j: %d, sz: %d, tmp: %d' % (j, sz,tmp))
                 new_data = _sin[j : j + tmp]
                 #print(new_data)
-                dev.tx(new_data)
+
                 j = j + tmp
 
         if i % 1000 == 0 and i != 0:
