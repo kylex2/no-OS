@@ -289,7 +289,7 @@ int32_t iio_app_run(struct iio_app_device *devices, int32_t len)
 
 	do {
 		status = iio_step(iio_desc);
-	} while (!IS_ERR_VALUE(status));
+	} while (true);
 error:
 #ifndef LINUX_PLATFORM
 	if (UART_BAUDRATE_DEFAULT != UART_BAUDRATE) {
