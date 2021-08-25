@@ -1,5 +1,5 @@
 /***************************************************************************//**
- *   @file   oled_demo/src/app/main.c
+ *   @file   display_demo/src/app/main.c
  *   @brief  Implementation of Main Function.
  *   @author Andrei Porumb (andrei.porumb@analog.com)
 ********************************************************************************
@@ -49,7 +49,7 @@
 #include "spi.h"
 #include "spi_extra.h"
 #include "ssd_1306.h"
-#include "oled.h"
+#include "display.h"
 #include "error.h"
 #include "delay.h"
 
@@ -58,78 +58,96 @@
 *******************************************************************************/
 int main(void)
 {
-	char msg[] = "Example of message here, max 16x4 chars (for 128x64 display)";
+	char msg[] = "Example of message here, max 16x4 chars (for 128x32 display)";
 
-	struct ssd_1306_dev *dev;
+	struct display_dev *dev;
 	int32_t ret;
 
 	struct xil_spi_init_param spi_extra = {
-			.type = SPI_PS,
-			.flags = 0U
+		.type = SPI_PS,
+		.flags = 0U
 	};
 
 	struct spi_init_param ssd_1306_spi_init_param = {
-			.device_id = SPI_DEVICE_ID,
-			.max_speed_hz = 10000000,
-			.mode = SPI_MODE_0,
-			.chip_select = 10U,
-			.bit_order = SPI_BIT_ORDER_MSB_FIRST,
-			.platform_ops = &xil_platform_ops,
-			.extra = &spi_extra
+		.device_id = SPI_DEVICE_ID,
+		.max_speed_hz = 10000000,
+		.mode = SPI_MODE_0,
+		.chip_select = 10U,
+		.bit_order = SPI_BIT_ORDER_MSB_FIRST,
+		.platform_ops = &xil_platform_ops,
+		.extra = &spi_extra
 	};
 
 	struct xil_gpio_init_param extra = {
-			.type = GPIO_PS,
-			.device_id = XPAR_PS7_GPIO_0_DEVICE_ID
+		.type = GPIO_PS,
+		.device_id = XPAR_PS7_GPIO_0_DEVICE_ID
 	};
 
 	struct gpio_init_param dc_pin = {
-			.number = DC_PIN,
-			.platform_ops = &xil_gpio_platform_ops,
-			.extra = &extra
+		.number = DC_PIN,
+		.platform_ops = &xil_gpio_platform_ops,
+		.extra = &extra
 	};
 	struct gpio_init_param reset_pin = {
-			.number = RST_PIN,
-			.platform_ops = &xil_gpio_platform_ops,
-			.extra = &extra
+		.number = RST_PIN,
+		.platform_ops = &xil_gpio_platform_ops,
+		.extra = &extra
 	};
+
+	struct gpio_desc *vbat;
 	struct gpio_init_param vbat_pin = {
-			.number = VBAT_PIN,
-			.platform_ops = &xil_gpio_platform_ops,
-			.extra = &extra
+		.number = VBAT_PIN,
+		.platform_ops = &xil_gpio_platform_ops,
+		.extra = &extra
 	};
+
+	struct gpio_desc *vdd;
 	struct gpio_init_param vdd_pin = {
-			.number = VDD_PIN,
-			.platform_ops = &xil_gpio_platform_ops,
-			.extra = &extra
+		.number = VDD_PIN,
+		.platform_ops = &xil_gpio_platform_ops,
+		.extra = &extra
 	};
-	struct ssd_1306_init_param ssd_1306_ip = {
-			.dc_pin    = &dc_pin,
-			.reset_pin = &reset_pin,
-			.vbat_pin  = &vbat_pin,
-			.vdd_pin   = &vdd_pin,
-			.spi_ip = &ssd_1306_spi_init_param,
+	struct display_init_param display_ip = {
+		.dc_pin    = &dc_pin,
+		.reset_pin = &reset_pin,
+		.spi_ip = &ssd_1306_spi_init_param,
+		.cols_nb = 16U,
+		.rows_nb = 4U,
+		.controller_ops = &ssd1306_ops
 	};
 
-	ret = ssd_1306_init(&dev, &ssd_1306_ip);
+	/* Turn VBAT and VDD on, Zedboard platform specific */
+	ret = gpio_get(&vbat, &vbat_pin);
 	if (ret != SUCCESS)
-			return FAILURE;
+		return FAILURE;
 
-	ret = ssd_1306_display_init(dev);
+	ret = gpio_direction_output(vbat, VBAT_ON);
 	if (ret != SUCCESS)
-			return FAILURE;
+		return FAILURE;
 
-	ret = display_on_off(dev, (uint8_t)DISP_ON);
+	ret = gpio_get(&vdd, &vdd_pin);
 	if (ret != SUCCESS)
-			return FAILURE;
+		return FAILURE;
 
-	ret = display_clear(dev, ROWS_NB, COL_NB);
+	ret = gpio_direction_output(vdd, VDD_ON);
 	if (ret != SUCCESS)
-			return FAILURE;
+		return FAILURE;
+
+	ret = display_init(&dev, &display_ip);
+	if (ret != SUCCESS)
+		return FAILURE;
+
+	ret = display_on_off(dev, DISP_ON);
+	if (ret != SUCCESS)
+		return FAILURE;
+
+	ret = display_clear(dev);
+	if (ret != SUCCESS)
+		return FAILURE;
 
 	ret = display_print_string(dev, msg, 0, 0);
 	if (ret != SUCCESS)
-			return FAILURE;
+		return FAILURE;
 
-return 0;
+	return SUCCESS;
 }

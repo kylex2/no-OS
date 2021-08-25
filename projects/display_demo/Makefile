@@ -1,8 +1,5 @@
 # Uncomment to use the desired platform
 # PLATFORM = xilinx
-# PLATFORM = altera
-# PLATFORM = aducm3029
-# PLATFORM = stm32
 
 include ../../tools/scripts/generic_variables.mk
 

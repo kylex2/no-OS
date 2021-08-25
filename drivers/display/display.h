@@ -1,6 +1,6 @@
 /***************************************************************************//**
- *   @file   oled.h
- *   @brief  Header file for oled display Driver.
+ *   @file   display.h
+ *   @brief  Header file for display Driver.
  *   @author Andrei Porumb (andrei.porumb@analog.com)
 ********************************************************************************
  * Copyright 2021(c) Analog Devices, Inc.
@@ -37,8 +37,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *******************************************************************************/
 
-#ifndef OLED_H
-#define OLED_H
+#ifndef DISPLAY_H
+#define DISPLAY_H
 
 /******************************************************************************/
 /***************************** Include Files **********************************/
@@ -54,42 +54,80 @@
 #define DISP_ON  1U
 #define DISP_OFF 0U
 
-//define display size
-#define ROWS_NB        4U
-#define COL_NB        16U
+typedef struct display_dev {
+	/* SPI */
+	struct spi_desc	           *spi_desc;
+	/** Data/Command pin */
+	struct gpio_desc	       *dc_pin;
+	/** RESET pin */
+	struct gpio_desc	       *reset_pin;
+	/** Number of columns */
+	uint8_t                    cols_nb;
+	/** Number of rows */
+	uint8_t                    rows_nb;
+	/** DISPLAY controller specific ops */
+	const struct display_controller_ops *controller_ops;
+} display_dev;
+
+typedef struct display_init_param {
+	/* SPI */
+	struct spi_init_param	   *spi_ip;
+	/** Data/Command pin */
+	struct gpio_init_param	   *dc_pin;
+	/** RESET pin */
+	struct gpio_init_param	   *reset_pin;
+	/** Number of columns */
+	uint8_t                    cols_nb;
+	/** Number of rows */
+	uint8_t                    rows_nb;
+	/** DISPLAY controller specific ops */
+	const struct display_controller_ops *controller_ops;
+} display_init_param;
+
+/**
+ * @struct display_controller_ops
+ * @brief Structure holding display controller function pointers that point to the controller
+ * specific function
+ */
+struct display_controller_ops {
+	/** Initialize controller for display usage. */
+	int32_t (*init)(struct display_dev *);
+	/** Turn display on/off */
+	int32_t (*display_on_off)(struct display_dev *, uint8_t);
+	/** Move cursor */
+	int32_t (*move_cursor)(struct display_dev *, uint8_t, uint8_t);
+	/** Print character by ascii number */
+	int32_t (*display_print_by_ascii)(struct display_dev *, uint8_t, uint8_t,
+					  uint8_t);
+};
 
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
 
+/* Initializes the display peripheral. */
+int32_t display_init(struct display_dev **device,
+		     const struct display_init_param *param);
+
+/* Frees the resources allocated by display_init(). */
+int32_t display_remove(struct display_dev *device);
+
 /* Turns display on/off */
-int32_t display_on_off(struct ssd_1306_dev *device, uint8_t on_off);
+int32_t display_on_off(struct display_dev *device, uint8_t on_off);
 
 /* Moves cursor to desired position. */
-int32_t move_cursor(struct ssd_1306_dev *device, uint8_t row, uint8_t column);
-
-/* Clears data on display. */
-int32_t display_clear(struct ssd_1306_dev *device, uint8_t rows, uint8_t columns);
+int32_t display_move_cursor(struct display_dev *device, uint8_t row,
+			    uint8_t column);
 
 /* Prints character at selected position. */
-int32_t display_print_ascii(struct ssd_1306_dev *device, uint8_t ascii, uint8_t row, uint8_t column);
+int32_t display_print_ascii(struct display_dev *device, uint8_t ascii,
+			    uint8_t row, uint8_t column);
+
+/* Clears data on display. */
+int32_t display_clear(struct display_dev *device);
 
 /* Prints char string at selected position. */
-int32_t display_print_string(struct ssd_1306_dev *device, char *msg, uint8_t row, uint8_t column);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+int32_t display_print_string(struct display_dev *device, char *msg,
+			     uint8_t row, uint8_t column);
 
 #endif

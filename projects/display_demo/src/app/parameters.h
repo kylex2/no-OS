@@ -1,5 +1,5 @@
 /***************************************************************************//**
- *   @file   oled_demo/src/app/parameters.h
+ *   @file   display_demo/src/app/parameters.h
  *   @brief  Parameters Definitions.
  *   @author Andrei Porumb (andrei.porumb@analog.com)
 ********************************************************************************

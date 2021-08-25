@@ -46,6 +46,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
+#include "display.h"
 #include "gpio.h"
 #include "spi.h"
 #include "error.h"
@@ -60,48 +61,24 @@
 #define DC_DATA    1U
 #define DC_CMD     0U
 
-/******************************************************************************/
-/*************************** Types Declarations *******************************/
-/******************************************************************************/
-
-typedef struct ssd_1306_dev {
-	/* SPI */
-	spi_desc	             *spi_desc;
-	/** DC pin */
-	struct gpio_desc	     *dc_pin;
-	/** RESET pin */
-	struct gpio_desc	     *reset_pin;
-	/** VBAT pin */
-	struct gpio_desc	     *vbat_pin;
-	/** VDD pin */
-	struct gpio_desc	     *vdd_pin;
-} ssd_1306_dev;
-
-typedef struct ssd_1306_init_param {
-	/* SPI */
-	spi_init_param	         *spi_ip;
-	/** DC pin */
-	struct gpio_init_param	 *dc_pin;
-	/** RESET pin */
-	struct gpio_init_param	 *reset_pin;
-	/** VBAT pin */
-	struct gpio_init_param   *vbat_pin;
-	/** VDD pin */
-	struct gpio_init_param   *vdd_pin;
-} ssd_1306_init_param;
+extern const struct display_controller_ops ssd1306_ops;
 
 /******************************************************************************/
 /************************ Functions Declarations ******************************/
 /******************************************************************************/
 
-/* Initialize the ssd_1306 peripheral. */
-int32_t ssd_1306_init(struct ssd_1306_dev **device,
-		 const struct ssd_1306_init_param *param);
-
-/* Free the resources allocated by ssd_1306_init(). */
-int32_t ssd_1306_remove(struct ssd_1306_dev *device);
-
-
 /* Initialize the ssd_1306 peripheral for display operation. */
-int32_t ssd_1306_display_init(struct ssd_1306_dev *device);
+int32_t ssd_1306_init(struct display_dev *device);
+
+/* ssd_1306 ssd_1306 turns display on/off. */
+int32_t ssd_1306_display_on_off(struct display_dev *device, uint8_t on_off);
+
+/*  Moves cursor to desired row/column. */
+int32_t ssd_1306_move_cursor(struct display_dev *device, uint8_t row,
+			     uint8_t column);
+
+/* Prints character at selected position. */
+int32_t ssd_1306_print_ascii(struct display_dev *device, uint8_t ascii,
+			     uint8_t row, uint8_t column);
+
 #endif
